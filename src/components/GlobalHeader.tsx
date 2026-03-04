@@ -112,13 +112,7 @@ export default function GlobalHeader() {
         </Stack>
       </Stack>
 
-      {/* Diligent spectrum stripe — fixed brand identity gradient */}
-      <Box
-        sx={{
-          height: 3,
-          background: `linear-gradient(90deg, ${tokens.core.color.brand.primary.diligentRed.value} 0%, ${tokens.core.color.orange[50].value} 15%, ${tokens.core.color.orange[60].value} 28%, ${tokens.core.color.yellow[80].value} 40%, ${tokens.core.color.green[70].value} 52%, ${tokens.core.color.blue[60].value} 65%, ${tokens.core.color.blue[50].value} 78%, ${tokens.core.color.indigo[40].value} 90%, ${tokens.core.color.purple[30].value} 100%)`,
-        }}
-      />
+      <Divider sx={{ borderColor: tokens.semantic.color.outline.fixed.value }} />
     </Box>
   );
 }
