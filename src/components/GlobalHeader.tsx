@@ -1,0 +1,125 @@
+import { Avatar, Box, Divider, IconButton, Stack, Typography, useTheme } from "@mui/material";
+import QuestionIcon from "@diligentcorp/atlas-react-bundle/icons/Question";
+import SettingsIcon from "@diligentcorp/atlas-react-bundle/icons/Settings";
+import AppSwitcherIcon from "@diligentcorp/atlas-react-bundle/icons/AppSwitcher";
+import ProfileIcon from "@diligentcorp/atlas-react-bundle/icons/Profile";
+
+export default function GlobalHeader() {
+  const { tokens } = useTheme();
+
+  return (
+    <Box
+      component="header"
+      sx={{
+        position: "sticky",
+        top: 0,
+        zIndex: 10,
+        backgroundColor: tokens.semantic.color.surface.default.value,
+      }}
+    >
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ px: 3, py: 1.25 }}
+      >
+        {/* Left: Diligent brand logo (includes wordmark) */}
+        <Box
+          component="img"
+          src="/diligent-logo.png"
+          alt="Diligent"
+          sx={{ height: 22 }}
+        />
+
+        {/* Right: actions + org switcher */}
+        <Stack direction="row" alignItems="center" spacing={0.75}>
+          <IconButton
+            size="small"
+            sx={{ color: tokens.semantic.color.type.muted.value }}
+          >
+            <QuestionIcon />
+          </IconButton>
+
+          <IconButton
+            size="small"
+            sx={{ color: tokens.semantic.color.type.muted.value }}
+          >
+            <SettingsIcon />
+          </IconButton>
+
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={{ mx: 0.75, my: 0.5 }}
+          />
+
+          <IconButton
+            size="small"
+            sx={{
+              backgroundColor: "#2d2d2d",
+              color: "#fff",
+              borderRadius: 1.5,
+              width: 32,
+              height: 32,
+              "&:hover": { backgroundColor: "#404040" },
+            }}
+          >
+            <AppSwitcherIcon />
+          </IconButton>
+
+          {/* Org switcher pill */}
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={1}
+            sx={{
+              border: `1px solid ${tokens.semantic.color.outline.default.value}`,
+              borderRadius: 99,
+              pl: 0.75,
+              pr: 0.5,
+              py: 0.5,
+              cursor: "pointer",
+              "&:hover": {
+                backgroundColor: tokens.semantic.color.surface.variant.value,
+              },
+            }}
+          >
+            <Avatar
+              sx={{
+                width: 24,
+                height: 24,
+                fontSize: "0.55rem",
+                fontWeight: 700,
+                bgcolor: "#1565c0",
+              }}
+            >
+              Pf
+            </Avatar>
+            <Typography variant="caption" fontWeight={600} sx={{ userSelect: "none" }}>
+              Pfizer Compliance
+            </Typography>
+            <Avatar
+              sx={{
+                width: 26,
+                height: 26,
+                bgcolor: tokens.semantic.color.surface.variant.value,
+                color: tokens.semantic.color.type.muted.value,
+              }}
+            >
+              <ProfileIcon />
+            </Avatar>
+          </Stack>
+        </Stack>
+      </Stack>
+
+      {/* Diligent spectrum stripe */}
+      <Box
+        sx={{
+          height: 3,
+          background:
+            "linear-gradient(90deg, #EE312E 0%, #F26522 15%, #F7941D 28%, #FFC107 40%, #8BC34A 52%, #00BFA5 65%, #00ACC1 78%, #1976D2 90%, #7B1FA2 100%)",
+        }}
+      />
+    </Box>
+  );
+}
