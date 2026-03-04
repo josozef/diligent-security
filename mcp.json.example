@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "Atlas": {
+      "url": "https://atlas.diligent.com/api/mcp",
+      "headers": {
+        "x-atlas-environment": "prototype",
+        "Authorization": "Bearer <YOUR_ATLAS_API_KEY>"
+      }
+    }
+  }
+}

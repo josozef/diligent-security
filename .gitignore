@@ -2,3 +2,8 @@ node_modules
 dist
 package-lock.json
 pnpm-lock.yaml
+
+# MCP server config (contains API keys)
+.mcp.json
+.cursor/mcp.json
+.vscode/mcp.json

@@ -56,12 +56,12 @@ export default function GlobalHeader() {
           <IconButton
             size="small"
             sx={{
-              backgroundColor: "#2d2d2d",
-              color: "#fff",
+              backgroundColor: tokens.semantic.color.action.primary.default.value,
+              color: tokens.semantic.color.action.primary.onPrimary.value,
               borderRadius: 1.5,
               width: 32,
               height: 32,
-              "&:hover": { backgroundColor: "#404040" },
+              "&:hover": { backgroundColor: tokens.semantic.color.action.primary.hover.value },
             }}
           >
             <AppSwitcherIcon />
@@ -90,7 +90,7 @@ export default function GlobalHeader() {
                 height: 24,
                 fontSize: "0.55rem",
                 fontWeight: 700,
-                bgcolor: "#1565c0",
+                bgcolor: tokens.semantic.color.dataVisualization.qualitative.blue["04"].value,
               }}
             >
               Pf
@@ -112,12 +112,11 @@ export default function GlobalHeader() {
         </Stack>
       </Stack>
 
-      {/* Diligent spectrum stripe */}
+      {/* Diligent spectrum stripe — fixed brand identity gradient */}
       <Box
         sx={{
           height: 3,
-          background:
-            "linear-gradient(90deg, #EE312E 0%, #F26522 15%, #F7941D 28%, #FFC107 40%, #8BC34A 52%, #00BFA5 65%, #00ACC1 78%, #1976D2 90%, #7B1FA2 100%)",
+          background: `linear-gradient(90deg, ${tokens.core.color.brand.primary.diligentRed.value} 0%, ${tokens.core.color.orange[50].value} 15%, ${tokens.core.color.orange[60].value} 28%, ${tokens.core.color.yellow[80].value} 40%, ${tokens.core.color.green[70].value} 52%, ${tokens.core.color.blue[60].value} 65%, ${tokens.core.color.blue[50].value} 78%, ${tokens.core.color.indigo[40].value} 90%, ${tokens.core.color.purple[30].value} 100%)`,
         }}
       />
     </Box>
