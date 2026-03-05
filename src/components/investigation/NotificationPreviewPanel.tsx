@@ -192,7 +192,7 @@ export default function NotificationPreviewPanel({
                     alignItems: "center",
                     justifyContent: "center",
                     color:
-                      tokens.semantic.color.status.error.textDefault.value,
+                      tokens.semantic.color.status.error.text.value,
                     flexShrink: 0,
                   }}
                 >
