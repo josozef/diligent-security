@@ -1,4 +1,5 @@
 import { type ReactNode } from "react";
+import { useNavigate } from "react-router";
 import {
   Box,
   Button,
@@ -19,6 +20,7 @@ interface Notification {
   description: string;
   metadata: string;
   actionLabel: string;
+  route?: string;
 }
 
 const notifications: Notification[] = [
@@ -30,7 +32,8 @@ const notifications: Notification[] = [
     description:
       "CVE-2026-1847 (CVSS 9.8) has been detected across 12 IT assets in 3 business-critical systems. Your security monitoring agents flagged active exploit activity. Immediate review is recommended.",
     metadata: "CVSS 9.8 · 12 assets · Active exploit · Detected 23 min ago",
-    actionLabel: "Review now",
+    actionLabel: "Investigate",
+    route: "/investigate/cve-2026-1847",
   },
   {
     id: "vendor-soc2-expired",
@@ -82,6 +85,7 @@ const severityConfig = {
 
 export default function HeroBanner() {
   const { tokens } = useTheme();
+  const navigate = useNavigate();
 
   return (
     <Stack spacing={2.5}>
@@ -223,6 +227,7 @@ export default function HeroBanner() {
                   color={config.buttonColor}
                   size="small"
                   sx={{ flexShrink: 0, alignSelf: "center" }}
+                  onClick={notification.route ? () => navigate(notification.route!) : undefined}
                 >
                   {notification.actionLabel}
                 </Button>

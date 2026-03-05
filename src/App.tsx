@@ -5,6 +5,7 @@ import "./styles.css";
 import GlobalHeader from "./components/GlobalHeader.js";
 import CommandCenterPage from "./pages/CommandCenterPage.js";
 import SettingsPage from "./pages/SettingsPage.js";
+import IncidentInvestigationPage from "./pages/IncidentInvestigationPage.js";
 
 function CenteredLayout() {
   const { tokens } = useTheme();
@@ -33,6 +34,7 @@ export default function App() {
         <Route index element={<CommandCenterPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
+      <Route path="/investigate/:incidentId" element={<IncidentInvestigationPage />} />
     </Routes>
   );
 }
