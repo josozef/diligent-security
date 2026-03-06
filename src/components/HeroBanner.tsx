@@ -162,10 +162,16 @@ export default function HeroBanner() {
       <Stack spacing={2}>
         {notifications.map((notification) => {
           const config = severityConfig[notification.severity];
+          const hasRoute = Boolean(notification.route);
           return (
             <Paper
               key={notification.id}
               elevation={0}
+              onClick={
+                hasRoute
+                  ? () => navigate(notification.route!)
+                  : undefined
+              }
               sx={{
                 border: `1px solid ${tokens.semantic.color.outline.default.value}`,
                 borderLeft: `4px solid ${config.borderColor}`,
@@ -173,7 +179,8 @@ export default function HeroBanner() {
                 backgroundColor: config.bg,
                 p: 2.5,
                 transition: "box-shadow 0.15s",
-                "&:hover": { boxShadow: 1 },
+                cursor: hasRoute ? "pointer" : undefined,
+                "&:hover": hasRoute ? { boxShadow: 1 } : undefined,
               }}
             >
               <Stack direction="row" spacing={2} alignItems="flex-start">
@@ -227,7 +234,14 @@ export default function HeroBanner() {
                   color={config.buttonColor}
                   size="small"
                   sx={{ flexShrink: 0, alignSelf: "center" }}
-                  onClick={notification.route ? () => navigate(notification.route!) : undefined}
+                  onClick={
+                    hasRoute
+                      ? (e) => {
+                          e.stopPropagation();
+                          navigate(notification.route!);
+                        }
+                      : undefined
+                  }
                 >
                   {notification.actionLabel}
                 </Button>

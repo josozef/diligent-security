@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import {
   Box,
   Button,
@@ -91,6 +91,48 @@ type RightPanel =
   | "resolution"
   | "board-briefing";
 
+const WORKFLOW_STORAGE_KEY_PREFIX = "incident-workflow-";
+
+interface PersistedWorkflowState {
+  phases: Record<string, PhaseStatus>;
+  phaseTimestamps: Record<string, string>;
+  chatStep: ChatStep;
+  rightPanel: RightPanel;
+  selectedIds: string[];
+  sentAt: string | null;
+  remediationStartedAt: string | null;
+}
+
+function getStorageKey(incidentId: string): string {
+  return `${WORKFLOW_STORAGE_KEY_PREFIX}${incidentId}`;
+}
+
+function loadWorkflowState(incidentId: string): PersistedWorkflowState | null {
+  try {
+    const raw = sessionStorage.getItem(getStorageKey(incidentId));
+    if (!raw) return null;
+    return JSON.parse(raw) as PersistedWorkflowState;
+  } catch {
+    return null;
+  }
+}
+
+function saveWorkflowState(incidentId: string, state: PersistedWorkflowState): void {
+  try {
+    sessionStorage.setItem(getStorageKey(incidentId), JSON.stringify(state));
+  } catch {
+    // ignore
+  }
+}
+
+function clearWorkflowState(incidentId: string): void {
+  try {
+    sessionStorage.removeItem(getStorageKey(incidentId));
+  } catch {
+    // ignore
+  }
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatTimestamp() {
@@ -110,19 +152,23 @@ function overallStatus(phases: Record<string, PhaseStatus>): "not-started" | "in
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
+const defaultPhases: Record<string, PhaseStatus> = {
+  notify: "not-started",
+  remediation: "not-started",
+  thirdParty: "not-started",
+  resolution: "not-started",
+  boardBriefing: "not-started",
+};
+
 export default function IncidentInvestigationPage() {
   const { tokens } = useTheme();
   const navigate = useNavigate();
+  const { incidentId = "" } = useParams<{ incidentId: string }>();
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const hasHydratedRef = useRef(false);
 
   // Phase completion state
-  const [phases, setPhases] = useState<Record<string, PhaseStatus>>({
-    notify: "not-started",
-    remediation: "not-started",
-    thirdParty: "not-started",
-    resolution: "not-started",
-    boardBriefing: "not-started",
-  });
+  const [phases, setPhases] = useState<Record<string, PhaseStatus>>(defaultPhases);
   const [phaseTimestamps, setPhaseTimestamps] = useState<Record<string, string>>({});
 
   // Chat progression + right panel view
@@ -138,6 +184,44 @@ export default function IncidentInvestigationPage() {
 
   // Remediation step state
   const [remediationStartedAt, setRemediationStartedAt] = useState<string | null>(null);
+
+  // Restore saved state on mount
+  useEffect(() => {
+    if (!incidentId) {
+      hasHydratedRef.current = true;
+      return;
+    }
+    const saved = loadWorkflowState(incidentId);
+    if (saved) {
+      setPhases(saved.phases ?? defaultPhases);
+      setPhaseTimestamps(saved.phaseTimestamps ?? {});
+      setChatStep(saved.chatStep ?? "triage");
+      setRightPanel(saved.rightPanel ?? "triage-report");
+      setSelected(new Set(saved.selectedIds ?? recommendedStakeholders.map((s) => s.id)));
+      setSentAt(saved.sentAt ?? null);
+      setRemediationStartedAt(saved.remediationStartedAt ?? null);
+    }
+    hasHydratedRef.current = true;
+  }, [incidentId]);
+
+  // Persist workflow state when it changes
+  useEffect(() => {
+    if (!incidentId || !hasHydratedRef.current) return;
+    saveWorkflowState(incidentId, {
+      phases,
+      phaseTimestamps,
+      chatStep,
+      rightPanel,
+      selectedIds: Array.from(selected),
+      sentAt,
+      remediationStartedAt,
+    });
+  }, [incidentId, phases, phaseTimestamps, chatStep, rightPanel, selected, sentAt, remediationStartedAt]);
+
+  function handleResetDemo() {
+    clearWorkflowState(incidentId);
+    window.location.reload();
+  }
 
   const allStakeholders = [...recommendedStakeholders, ...additionalStakeholders];
   const selectedStakeholders = allStakeholders.filter((s) => selected.has(s.id));
@@ -722,6 +806,13 @@ export default function IncidentInvestigationPage() {
         <Box sx={{ width: "50%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
           {rightPanelContent}
         </Box>
+      </Box>
+
+      {/* Demo reset */}
+      <Box sx={{ px: 2, py: 1, textAlign: "right", borderTop: `1px solid ${tokens.semantic.color.outline.fixed.value}` }}>
+        <Button variant="text" size="small" onClick={handleResetDemo} sx={{ color: tokens.semantic.color.type.muted.value, textTransform: "none", fontSize: 12 }}>
+          Reset demo
+        </Button>
       </Box>
     </Box>
   );
