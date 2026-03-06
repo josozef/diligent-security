@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
   Box,
@@ -93,6 +94,47 @@ interface WorkflowStep {
   onCta: () => void;
 }
 
+const WORKFLOW_STORAGE_KEY_PREFIX = "incident-workflow-";
+
+interface PersistedWorkflowState {
+  phases: Record<string, PhaseStatus>;
+  phaseTimestamps: Record<string, string>;
+  leftView: LeftView;
+  selectedIds: string[];
+  sentAt: string | null;
+  remediationStartedAt: string | null;
+}
+
+function getStorageKey(incidentId: string): string {
+  return `${WORKFLOW_STORAGE_KEY_PREFIX}${incidentId}`;
+}
+
+function loadWorkflowState(incidentId: string): PersistedWorkflowState | null {
+  try {
+    const raw = sessionStorage.getItem(getStorageKey(incidentId));
+    if (!raw) return null;
+    return JSON.parse(raw) as PersistedWorkflowState;
+  } catch {
+    return null;
+  }
+}
+
+function saveWorkflowState(incidentId: string, state: PersistedWorkflowState): void {
+  try {
+    sessionStorage.setItem(getStorageKey(incidentId), JSON.stringify(state));
+  } catch {
+    // ignore
+  }
+}
+
+function clearWorkflowState(incidentId: string): void {
+  try {
+    sessionStorage.removeItem(getStorageKey(incidentId));
+  } catch {
+    // ignore
+  }
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatTimestamp() {
@@ -123,7 +165,8 @@ const defaultPhases: Record<string, PhaseStatus> = {
 export default function IncidentInvestigationPage() {
   const { tokens } = useTheme();
   const navigate = useNavigate();
-  const { incidentId: _incidentId } = useParams<{ incidentId: string }>();
+  const { incidentId = "" } = useParams<{ incidentId: string }>();
+  const hasHydratedRef = useRef(false);
 
   const [leftView, setLeftView] = useState<LeftView>("hub");
 
@@ -139,7 +182,38 @@ export default function IncidentInvestigationPage() {
   const [sentAt, setSentAt] = useState<string | null>(null);
 
   // Remediation step state
-  const [, setRemediationStartedAt] = useState<string | null>(null);
+  const [remediationStartedAt, setRemediationStartedAt] = useState<string | null>(null);
+
+  // Restore saved state on mount
+  useEffect(() => {
+    if (!incidentId) {
+      hasHydratedRef.current = true;
+      return;
+    }
+    const saved = loadWorkflowState(incidentId);
+    if (saved) {
+      setPhases(saved.phases ?? defaultPhases);
+      setPhaseTimestamps(saved.phaseTimestamps ?? {});
+      setLeftView(saved.leftView ?? "hub");
+      setSelected(new Set(saved.selectedIds ?? recommendedStakeholders.map((s) => s.id)));
+      setSentAt(saved.sentAt ?? null);
+      setRemediationStartedAt(saved.remediationStartedAt ?? null);
+    }
+    hasHydratedRef.current = true;
+  }, [incidentId]);
+
+  // Persist workflow state when it changes
+  useEffect(() => {
+    if (!incidentId || !hasHydratedRef.current) return;
+    saveWorkflowState(incidentId, {
+      phases,
+      phaseTimestamps,
+      leftView,
+      selectedIds: Array.from(selected),
+      sentAt,
+      remediationStartedAt,
+    });
+  }, [incidentId, phases, phaseTimestamps, leftView, selected, sentAt, remediationStartedAt]);
 
   const allStakeholders = [...recommendedStakeholders, ...additionalStakeholders];
   const selectedStakeholders = allStakeholders.filter((s) => selected.has(s.id));
@@ -218,6 +292,7 @@ export default function IncidentInvestigationPage() {
   }
 
   function handleResetDemo() {
+    if (incidentId) clearWorkflowState(incidentId);
     window.location.reload();
   }
 
@@ -311,7 +386,7 @@ export default function IncidentInvestigationPage() {
 
   // ─── Left panel content ───────────────────────────────────────────────────
 
-  let leftPanelContent: React.ReactNode;
+  let leftPanelContent: ReactNode;
 
   if (leftView === "hub") {
     leftPanelContent = (
