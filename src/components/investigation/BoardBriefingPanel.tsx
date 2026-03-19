@@ -223,7 +223,7 @@ export default function BoardBriefingPanel({
                 Committee
               </Typography>
               <Select
-                size="small"
+                size="medium"
                 fullWidth
                 value={selectedCommittee}
                 onChange={(e) => handleCommitteeChange(e.target.value)}

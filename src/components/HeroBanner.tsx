@@ -94,7 +94,7 @@ export default function HeroBanner({ hasAlerts = true }: HeroBannerProps) {
 
   return (
     <Stack spacing={2.5}>
-      {hasAlerts ? <AlertsBanner tokens={tokens} navigate={navigate} /> : <ClearBanner tokens={tokens} />}
+      {hasAlerts ? <AlertsBanner navigate={navigate} /> : <ClearBanner />}
 
       {/* Monitoring agents status bar */}
       <Stack
@@ -156,7 +156,8 @@ export default function HeroBanner({ hasAlerts = true }: HeroBannerProps) {
   );
 }
 
-function ClearBanner({ tokens }: { tokens: ReturnType<typeof useTheme>["tokens"] }) {
+function ClearBanner() {
+  const { tokens } = useTheme();
   return (
     <Paper
       elevation={0}
@@ -198,13 +199,8 @@ function ClearBanner({ tokens }: { tokens: ReturnType<typeof useTheme>["tokens"]
   );
 }
 
-function AlertsBanner({
-  tokens,
-  navigate,
-}: {
-  tokens: ReturnType<typeof useTheme>["tokens"];
-  navigate: ReturnType<typeof useNavigate>;
-}) {
+function AlertsBanner({ navigate }: { navigate: ReturnType<typeof useNavigate> }) {
+  const { tokens } = useTheme();
   return (
     <>
       {/* Section header */}

@@ -1,4 +1,4 @@
-import { Box, Stack, Typography, useTheme } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 
 import { useDemo } from "../DemoContext";
 import PageLayout from "../components/PageLayout.js";
@@ -10,7 +10,6 @@ import ProactiveTasks from "../components/ProactiveTasks.js";
 import SystemLog from "../components/SystemLog.js";
 
 export default function CommandCenterPage() {
-  const { tokens } = useTheme();
   const { hasAlerts } = useDemo();
 
   return (

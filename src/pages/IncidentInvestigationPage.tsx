@@ -139,7 +139,7 @@ export default function IncidentInvestigationPage() {
   const [sentAt, setSentAt] = useState<string | null>(null);
 
   // Remediation step state
-  const [remediationStartedAt, setRemediationStartedAt] = useState<string | null>(null);
+  const [, setRemediationStartedAt] = useState<string | null>(null);
 
   const allStakeholders = [...recommendedStakeholders, ...additionalStakeholders];
   const selectedStakeholders = allStakeholders.filter((s) => selected.has(s.id));
