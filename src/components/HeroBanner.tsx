@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import VirusFoundIcon from "@diligentcorp/atlas-react-bundle/icons/VirusFound";
 import ThirdPartyIcon from "@diligentcorp/atlas-react-bundle/icons/ThirdParty";
+import CheckedCircleIcon from "@diligentcorp/atlas-react-bundle/icons/CheckedCircle";
 
 interface Notification {
   id: string;
@@ -83,12 +84,18 @@ const severityConfig = {
   },
 };
 
-export default function HeroBanner() {
+interface HeroBannerProps {
+  hasAlerts?: boolean;
+}
+
+export default function HeroBanner({ hasAlerts = true }: HeroBannerProps) {
   const { tokens } = useTheme();
   const navigate = useNavigate();
 
   return (
     <Stack spacing={2.5}>
+      {hasAlerts ? <AlertsBanner navigate={navigate} /> : <ClearBanner />}
+
       {/* Monitoring agents status bar */}
       <Stack
         direction="row"
@@ -145,7 +152,57 @@ export default function HeroBanner() {
           </Stack>
         ))}
       </Stack>
+    </Stack>
+  );
+}
 
+function ClearBanner() {
+  const { tokens } = useTheme();
+  return (
+    <Paper
+      elevation={0}
+      sx={{
+        p: 4,
+        borderRadius: tokens.semantic.radius.lg.value,
+        backgroundColor: tokens.semantic.color.surface.default.value,
+        border: `1px solid ${tokens.semantic.color.outline.default.value}`,
+        textAlign: "center",
+      }}
+    >
+      <Stack spacing={1.5} alignItems="center">
+        <Box
+          sx={{
+            width: 48,
+            height: 48,
+            borderRadius: "50%",
+            backgroundColor: tokens.semantic.color.status.success.background.value,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: tokens.semantic.color.status.success.text.value,
+          }}
+        >
+          <CheckedCircleIcon style={{ fontSize: 28 }} />
+        </Box>
+        <Typography variant="h5" fontWeight={700}>
+          Your IT security posture is in good shape.
+        </Typography>
+        <Typography
+          variant="textSm"
+          sx={{ color: tokens.semantic.color.type.muted.value, maxWidth: 560 }}
+        >
+          All systems are patched, monitoring agents active, and compliance frameworks current.
+          A good time to review risk assessments and optimize your security posture.
+        </Typography>
+      </Stack>
+    </Paper>
+  );
+}
+
+function AlertsBanner({ navigate }: { navigate: ReturnType<typeof useNavigate> }) {
+  const { tokens } = useTheme();
+  return (
+    <>
       {/* Section header */}
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Typography variant="h6" fontWeight={600}>
@@ -250,6 +307,6 @@ export default function HeroBanner() {
           );
         })}
       </Stack>
-    </Stack>
+    </>
   );
 }
