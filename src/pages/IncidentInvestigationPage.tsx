@@ -874,6 +874,13 @@ export default function IncidentInvestigationPage() {
           Reset demo
         </Button>
       </Box>
+
+      {/* Demo reset */}
+      <Box sx={{ px: 2, py: 1, textAlign: "right", borderTop: `1px solid ${tokens.semantic.color.outline.fixed.value}` }}>
+        <Button variant="text" size="small" onClick={handleResetDemo} sx={{ color: tokens.semantic.color.type.muted.value, textTransform: "none", fontSize: 12 }}>
+          Reset demo
+        </Button>
+      </Box>
     </Box>
   );
 }
