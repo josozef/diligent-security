@@ -1,6 +1,11 @@
 import { Box, Stack, Typography, useTheme } from "@mui/material";
 
-const logEntries = [
+interface LogEntry {
+  source: string;
+  message: string;
+}
+
+const alertLogEntries: LogEntry[] = [
   {
     source: "Vulnerability scanner",
     message:
@@ -28,8 +33,41 @@ const logEntries = [
   },
 ];
 
-export default function SystemLog() {
+const clearLogEntries: LogEntry[] = [
+  {
+    source: "Vulnerability scanner",
+    message:
+      "Weekly production scan completed — 0 new vulnerabilities. All assets current.",
+  },
+  {
+    source: "Compliance monitor",
+    message:
+      "SOC 2 Type II, ISO 27001, NIST CSF, and PCI DSS assessments all current. No action needed.",
+  },
+  {
+    source: "Risk register",
+    message:
+      "Quarterly risk recalculation complete — residual risk within acceptable thresholds.",
+  },
+  {
+    source: "Vendor risk",
+    message:
+      "All tier-1 vendor certifications verified and current. Next review in 28 days.",
+  },
+  {
+    source: "Threat intelligence",
+    message:
+      "Threat feed updated — no active threats targeting current infrastructure.",
+  },
+];
+
+interface SystemLogProps {
+  hasAlerts?: boolean;
+}
+
+export default function SystemLog({ hasAlerts = true }: SystemLogProps) {
   const { tokens } = useTheme();
+  const logEntries = hasAlerts ? alertLogEntries : clearLogEntries;
 
   return (
     <Stack spacing={1.5}>
