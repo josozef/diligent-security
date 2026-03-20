@@ -79,7 +79,7 @@ export default function PendingVulnerabilities() {
               }}
             />
             <Typography variant="subtitle1" fontWeight={600}>
-              Vulnerabilities requiring your review
+              Vulnerabilities pending review
             </Typography>
           </Stack>
           <Typography

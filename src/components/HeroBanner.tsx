@@ -31,7 +31,7 @@ const notifications: Notification[] = [
     icon: <VirusFoundIcon />,
     title: "Critical vulnerability detected",
     description:
-      "CVE-2026-1847 (CVSS 9.8) has been detected across 12 IT assets in 3 business-critical systems. Your security monitoring agents flagged active exploit activity. Immediate review is recommended.",
+      "CVE-2026-1847 (CVSS 9.8) has been detected across 12 IT assets in 3 business-critical systems. Security monitoring agents flagged active exploit activity. Immediate review is recommended.",
     metadata: "CVSS 9.8 · 12 assets · Active exploit · Detected 23 min ago",
     actionLabel: "Investigate",
     route: "/investigate/cve-2026-1847",
@@ -185,14 +185,14 @@ function ClearBanner() {
           <CheckedCircleIcon style={{ fontSize: 28 }} />
         </Box>
         <Typography variant="h5" fontWeight={700}>
-          Your IT security posture is in good shape.
+          IT security posture is in good shape.
         </Typography>
         <Typography
           variant="textSm"
           sx={{ color: tokens.semantic.color.type.muted.value, maxWidth: 560 }}
         >
           All systems are patched, monitoring agents active, and compliance frameworks current.
-          A good time to review risk assessments and optimize your security posture.
+          Good time to review risk assessments and optimize security posture.
         </Typography>
       </Stack>
     </Paper>
@@ -206,7 +206,7 @@ function AlertsBanner({ navigate }: { navigate: ReturnType<typeof useNavigate> }
       {/* Section header */}
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Typography variant="h6" fontWeight={600}>
-          Needs your attention
+          Action required
         </Typography>
         <Chip
           label={`${notifications.length} items`}
@@ -215,8 +215,14 @@ function AlertsBanner({ navigate }: { navigate: ReturnType<typeof useNavigate> }
         />
       </Stack>
 
-      {/* Notification cards */}
-      <Stack spacing={2}>
+      {/* Notification cards — two-up on md+ to match linear layout */}
+      <Box
+        sx={{
+          display: "grid",
+          gap: 2,
+          gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
+        }}
+      >
         {notifications.map((notification) => {
           const config = severityConfig[notification.severity];
           const hasRoute = Boolean(notification.route);
@@ -230,6 +236,7 @@ function AlertsBanner({ navigate }: { navigate: ReturnType<typeof useNavigate> }
                   : undefined
               }
               sx={{
+                minWidth: 0,
                 border: `1px solid ${tokens.semantic.color.outline.default.value}`,
                 borderLeft: `4px solid ${config.borderColor}`,
                 borderRadius: tokens.semantic.radius.lg.value,
@@ -306,7 +313,7 @@ function AlertsBanner({ navigate }: { navigate: ReturnType<typeof useNavigate> }
             </Paper>
           );
         })}
-      </Stack>
+      </Box>
     </>
   );
 }

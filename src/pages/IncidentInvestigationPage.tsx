@@ -8,7 +8,6 @@ import {
   Chip,
   Divider,
   IconButton,
-  LinearProgress,
   Paper,
   Stack,
   TextField,
@@ -19,6 +18,7 @@ import {
 import {
   AIChatBox,
   AIChatContextProvider,
+  LinearStepper,
   StatusIndicator,
 } from "@diligentcorp/atlas-react-bundle";
 import ArrowLeftIcon from "@diligentcorp/atlas-react-bundle/icons/ArrowLeft";
@@ -73,33 +73,19 @@ const relatedThreats = [
   { threat: "Third-party supply chain compromise", category: "Threat — Vendor risk" },
 ];
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Step definitions ────────────────────────────────────────────────────────
 
-type LeftView =
-  | "hub"
-  | "triage-report"
-  | "notification"
-  | "remediation-plan"
-  | "third-party-review"
-  | "resolution"
-  | "board-briefing";
+const STEP_KEYS = ["triage", "notify", "remediation", "thirdParty", "resolution", "boardBriefing"];
+const STEP_LABELS = ["Automated triage", "Notify stakeholders", "Remediation", "Third-party review", "Resolution", "Board briefing"];
 
-interface WorkflowStep {
-  key: string;
-  label: string;
-  status: PhaseStatus;
-  summary: string;
-  completedAt?: string;
-  ctaLabel: string;
-  onCta: () => void;
-}
+// ─── Persistence ─────────────────────────────────────────────────────────────
 
 const WORKFLOW_STORAGE_KEY_PREFIX = "incident-workflow-";
 
 interface PersistedWorkflowState {
   phases: Record<string, PhaseStatus>;
   phaseTimestamps: Record<string, string>;
-  leftView: LeftView;
+  activeStep: number;
   selectedIds: string[];
   sentAt: string | null;
   remediationStartedAt: string | null;
@@ -145,13 +131,6 @@ function formatTimestamp() {
   });
 }
 
-function overallStatus(phases: Record<string, PhaseStatus>): "not-started" | "in-progress" | "complete" {
-  const vals = Object.values(phases);
-  if (vals.every((v) => v === "complete")) return "complete";
-  if (vals.every((v) => v === "not-started")) return "not-started";
-  return "in-progress";
-}
-
 // ─── Component ───────────────────────────────────────────────────────────────
 
 const defaultPhases: Record<string, PhaseStatus> = {
@@ -168,9 +147,7 @@ export default function IncidentInvestigationPage() {
   const { incidentId = "" } = useParams<{ incidentId: string }>();
   const hasHydratedRef = useRef(false);
 
-  const [leftView, setLeftView] = useState<LeftView>("hub");
-
-  // Phase completion state
+  const [activeStep, setActiveStep] = useState(0);
   const [phases, setPhases] = useState<Record<string, PhaseStatus>>(defaultPhases);
   const [phaseTimestamps, setPhaseTimestamps] = useState<Record<string, string>>({});
 
@@ -194,7 +171,7 @@ export default function IncidentInvestigationPage() {
     if (saved) {
       setPhases(saved.phases ?? defaultPhases);
       setPhaseTimestamps(saved.phaseTimestamps ?? {});
-      setLeftView(saved.leftView ?? "hub");
+      setActiveStep(saved.activeStep ?? 0);
       setSelected(new Set(saved.selectedIds ?? recommendedStakeholders.map((s) => s.id)));
       setSentAt(saved.sentAt ?? null);
       setRemediationStartedAt(saved.remediationStartedAt ?? null);
@@ -208,15 +185,13 @@ export default function IncidentInvestigationPage() {
     saveWorkflowState(incidentId, {
       phases,
       phaseTimestamps,
-      leftView,
+      activeStep,
       selectedIds: Array.from(selected),
       sentAt,
       remediationStartedAt,
     });
-  }, [incidentId, phases, phaseTimestamps, leftView, selected, sentAt, remediationStartedAt]);
+  }, [incidentId, phases, phaseTimestamps, activeStep, selected, sentAt, remediationStartedAt]);
 
-  const allStakeholders = [...recommendedStakeholders, ...additionalStakeholders];
-  const selectedStakeholders = allStakeholders.filter((s) => selected.has(s.id));
   const filteredAdditional = additionalStakeholders.filter(
     (s) =>
       !selected.has(s.id) &&
@@ -224,6 +199,27 @@ export default function IncidentInvestigationPage() {
         s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         s.department.toLowerCase().includes(searchQuery.toLowerCase())),
   );
+
+  // ─── Stepper computation ───────────────────────────────────────────────────
+
+  const isStepComplete = (i: number) => i === 0 || phases[STEP_KEYS[i]] === "complete";
+
+  let highestReachable = 0;
+  for (let i = 0; i < STEP_KEYS.length; i++) {
+    const status = i === 0 ? "complete" : (phases[STEP_KEYS[i]] ?? "not-started");
+    if (status === "complete") {
+      highestReachable = Math.min(i + 1, STEP_KEYS.length - 1);
+    } else if (status !== "not-started") {
+      highestReachable = Math.max(highestReachable, i);
+    }
+  }
+  const frontier = Math.max(activeStep, highestReachable);
+
+  const stepperSteps = STEP_KEYS.map((_, i) => ({
+    label: STEP_LABELS[i],
+    completed: isStepComplete(i),
+    locked: i > frontier,
+  }));
 
   // ─── Handlers ──────────────────────────────────────────────────────────────
 
@@ -241,21 +237,12 @@ export default function IncidentInvestigationPage() {
     setSearchQuery("");
   }
 
-  function handleGoToNotify() {
-    setPhases((p) => ({ ...p, notify: p.notify === "not-started" ? "in-progress" : p.notify }));
-    setLeftView("notification");
-  }
-
   function handleSendNotifications() {
     const ts = formatTimestamp();
     setSentAt(ts);
     setPhases((p) => ({ ...p, notify: "complete" }));
     setPhaseTimestamps((t) => ({ ...t, notify: ts }));
-    setLeftView("hub");
-  }
-
-  function handleGoToRemediation() {
-    setLeftView("remediation-plan");
+    setActiveStep(2);
   }
 
   function handleInitiateRemediation() {
@@ -263,32 +250,27 @@ export default function IncidentInvestigationPage() {
     setRemediationStartedAt(ts);
     setPhases((p) => ({ ...p, remediation: "in-progress" }));
     setPhaseTimestamps((t) => ({ ...t, remediation: ts }));
-    setLeftView("hub");
+    setActiveStep(3);
   }
 
   function handleStartThirdPartyReview() {
     const ts = formatTimestamp();
     setPhases((p) => ({ ...p, thirdParty: "complete" }));
     setPhaseTimestamps((t) => ({ ...t, thirdParty: ts }));
-    setLeftView("hub");
+    setActiveStep(4);
   }
 
   function handleCompleteResolution() {
     const ts = formatTimestamp();
     setPhases((p) => ({ ...p, resolution: "complete" }));
     setPhaseTimestamps((t) => ({ ...t, resolution: ts }));
-    setLeftView("hub");
+    setActiveStep(5);
   }
 
   function handleSendBoardBriefing() {
     const ts = formatTimestamp();
     setPhases((p) => ({ ...p, boardBriefing: "complete" }));
     setPhaseTimestamps((t) => ({ ...t, boardBriefing: ts }));
-    setLeftView("hub");
-  }
-
-  function handleBackToHub() {
-    setLeftView("hub");
   }
 
   function handleResetDemo() {
@@ -296,241 +278,26 @@ export default function IncidentInvestigationPage() {
     window.location.reload();
   }
 
-  // ─── Workflow steps for hub ────────────────────────────────────────────────
+  // ─── Center panel content ──────────────────────────────────────────────────
 
-  const workflowSteps: WorkflowStep[] = [
-    {
-      key: "triage",
-      label: "Automated triage",
-      status: "complete",
-      summary: "Cross-referenced 12 assets against policies, compliance frameworks, risk register, and known threats.",
-      completedAt: "Today, 2:15 PM",
-      ctaLabel: "View report",
-      onCta: () => setLeftView("triage-report"),
-    },
-    {
-      key: "notify",
-      label: "Notify stakeholders",
-      status: phases.notify,
-      completedAt: phaseTimestamps.notify ? `Today, ${phaseTimestamps.notify}` : undefined,
-      summary:
-        phases.notify === "complete"
-          ? `Context-aware notifications sent to ${selectedStakeholders.length} stakeholders.`
-          : "Route context-aware alerts to asset owners, CISO, and General Counsel.",
-      ctaLabel: phases.notify === "not-started" ? "Notify stakeholders" : "View details",
-      onCta: handleGoToNotify,
-    },
-    {
-      key: "remediation",
-      label: "Remediation",
-      status: phases.remediation,
-      completedAt: phaseTimestamps.remediation ? `Today, ${phaseTimestamps.remediation}` : undefined,
-      summary:
-        phases.remediation !== "not-started"
-          ? `${remediationTickets.length} ITSM tickets created. Patching sequence optimized by criticality.`
-          : "Create ITSM tickets, link failed controls, and coordinate patching schedule.",
-      ctaLabel: phases.remediation === "not-started" ? "Initiate remediation" : "View details",
-      onCta: handleGoToRemediation,
-    },
-    {
-      key: "thirdParty",
-      label: "Third-party review",
-      status: phases.thirdParty,
-      completedAt: phaseTimestamps.thirdParty ? `Today, ${phaseTimestamps.thirdParty}` : undefined,
-      summary:
-        phases.thirdParty === "complete"
-          ? "Vendor assessment documented; CrowdStrike record and SLAs reviewed."
-          : "Assess CrowdStrike vendor record, SLAs, and compensating controls.",
-      ctaLabel: phases.thirdParty === "complete" ? "View details" : "Start review",
-      onCta: () => setLeftView("third-party-review"),
-    },
-    {
-      key: "resolution",
-      label: "Resolution",
-      status: phases.resolution,
-      completedAt: phaseTimestamps.resolution ? `Today, ${phaseTimestamps.resolution}` : undefined,
-      summary:
-        phases.resolution === "complete"
-          ? "Incident closed; patches verified, tickets closed, evidence pack compiled."
-          : "Verify patches deployed, close tickets, compile evidence pack.",
-      ctaLabel: phases.resolution === "complete" ? "View details" : "Mark complete",
-      onCta: () => setLeftView("resolution"),
-    },
-    {
-      key: "boardBriefing",
-      label: "Board briefing",
-      status: phases.boardBriefing,
-      completedAt: phaseTimestamps.boardBriefing ? `Today, ${phaseTimestamps.boardBriefing}` : undefined,
-      summary:
-        phases.boardBriefing === "complete"
-          ? "Board notification sent; executive summary delivered to audit/risk committee."
-          : "Generate executive summary for audit/risk committee review.",
-      ctaLabel: phases.boardBriefing === "complete" ? "View details" : "Send briefing",
-      onCta: () => setLeftView("board-briefing"),
-    },
-  ];
+  let centerContent: ReactNode;
 
-  const allPhases = { triage: "complete" as PhaseStatus, ...phases };
-  const incident = overallStatus(allPhases);
-  const completedCount = Object.values(allPhases).filter((v) => v === "complete").length;
-  const totalCount = Object.keys(allPhases).length;
-
-  const statusChip =
-    incident === "complete" ? (
-      <StatusIndicator icon={<CheckedCircleIcon />} label="Complete" size="small" color="success" />
-    ) : incident === "in-progress" ? (
-      <StatusIndicator label="In progress" size="small" color="warning" />
-    ) : (
-      <StatusIndicator label="Not started" size="small" color="subtle" />
-    );
-
-  // ─── Left panel content ───────────────────────────────────────────────────
-
-  let leftPanelContent: ReactNode;
-
-  if (leftView === "hub") {
-    leftPanelContent = (
-      <Box sx={{ flex: 1, overflow: "auto", p: 3, backgroundColor: tokens.semantic.color.surface.subtle.value }}>
-        <Stack spacing={2}>
-          {/* Incident summary */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2.5,
-              borderRadius: tokens.semantic.radius.md.value,
-              backgroundColor: tokens.semantic.color.surface.default.value,
-              border: `1px solid ${tokens.semantic.color.outline.fixed.value}`,
-            }}
-          >
-            <Stack spacing={2}>
-              <Stack direction="row" alignItems="center" spacing={1.5}>
-                <Box
-                  sx={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: "50%",
-                    backgroundColor: tokens.semantic.color.status.error.background.value,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <VirusFoundIcon style={{ fontSize: 20, color: tokens.semantic.color.status.error.text.value }} />
-                </Box>
-                <Stack spacing={0.25} flex={1}>
-                  <Typography variant="subtitle1" fontWeight={600}>CVE-2026-1847</Typography>
-                  <Typography variant="caption" sx={{ color: tokens.semantic.color.type.muted.value }}>
-                    CrowdStrike Falcon Sensor for Windows · Remote code execution (heap overflow)
-                  </Typography>
-                </Stack>
-                <Chip label="CVSS 9.8" size="small" color="error" />
-              </Stack>
-
-              <Divider />
-
-              <Stack direction="row" spacing={4} flexWrap="wrap">
-                <SummaryMetric label="Affected assets" value="12 across 3 systems" />
-                <SummaryMetric label="Exploit status" value="Active exploitation" />
-                <SummaryMetric label="Risk level" value="Critical — Likely material" />
-                <SummaryMetric label="Detected" value="Today, 2:14 PM" />
-              </Stack>
-
-              <Box
-                sx={{
-                  p: 1.5,
-                  borderRadius: tokens.semantic.radius.sm.value,
-                  border: `1px solid ${tokens.semantic.color.status.error.default.value}`,
-                  backgroundColor: tokens.semantic.color.status.error.background.value,
-                }}
-              >
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
-                  <Typography variant="caption" fontWeight={600}>Materiality assessment</Typography>
-                  <StatusIndicator label="Requires review" size="small" color="error" />
-                </Stack>
-                <Typography variant="caption" sx={{ color: tokens.semantic.color.type.muted.value }}>
-                  Active exploit targeting production payment processing infrastructure in PCI scope.
-                  Recommend escalation to CISO and General Counsel for SEC 8-K / 10-K evaluation.
-                </Typography>
-              </Box>
-            </Stack>
-          </Paper>
-
-          {/* Workflow progress */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2,
-              borderRadius: tokens.semantic.radius.md.value,
-              backgroundColor: tokens.semantic.color.surface.default.value,
-              border: `1px solid ${tokens.semantic.color.outline.fixed.value}`,
-            }}
-          >
-            <Stack spacing={1}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Typography variant="textSm" fontWeight={600}>Suggested response workflow</Typography>
-                <Typography variant="caption" sx={{ color: tokens.semantic.color.type.muted.value }}>
-                  {completedCount} of {totalCount} steps complete
-                </Typography>
-              </Stack>
-              <LinearProgress
-                variant="determinate"
-                value={(completedCount / totalCount) * 100}
-                color={completedCount === totalCount ? "success" : "warning"}
-                sx={{ borderRadius: 1, height: 5 }}
-              />
-            </Stack>
-          </Paper>
-
-          {/* Workflow step cards */}
-          {workflowSteps.map((step) => (
-            <Paper
-              key={step.key}
-              elevation={0}
-              sx={{
-                p: 2,
-                borderRadius: tokens.semantic.radius.md.value,
-                backgroundColor: tokens.semantic.color.surface.default.value,
-                border: `1px solid ${tokens.semantic.color.outline.fixed.value}`,
-              }}
-            >
-              <Stack spacing={1}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Typography variant="textSm" fontWeight={600}>{step.label}</Typography>
-                  <StatusChip status={step.status} />
-                </Stack>
-                <Typography variant="caption" sx={{ color: tokens.semantic.color.type.muted.value }}>
-                  {step.summary}
-                </Typography>
-                {step.completedAt && (
-                  <Typography variant="caption" sx={{ color: tokens.semantic.color.type.muted.value, fontSize: "0.675rem" }}>
-                    Completed {step.completedAt}
-                  </Typography>
-                )}
-                <Button
-                  variant={step.status === "not-started" ? "contained" : "outlined"}
-                  size="small"
-                  onClick={step.onCta}
-                  sx={{ alignSelf: "flex-start", mt: 0.5 }}
-                >
-                  {step.ctaLabel}
-                </Button>
-              </Stack>
-            </Paper>
-          ))}
-        </Stack>
-      </Box>
-    );
-  } else if (leftView === "triage-report") {
-    leftPanelContent = (
+  if (activeStep === 0) {
+    centerContent = (
       <TriageReportPanel
-        onBack={handleBackToHub}
-        onNotifyStakeholders={phases.notify === "not-started" ? handleGoToNotify : undefined}
+        onNotifyStakeholders={
+          phases.notify === "not-started"
+            ? () => {
+                setPhases((p) => ({ ...p, notify: "in-progress" }));
+                setActiveStep(1);
+              }
+            : undefined
+        }
       />
     );
-  } else if (leftView === "notification") {
+  } else if (activeStep === 1) {
     const notifyDone = phases.notify === "complete";
-    leftPanelContent = (
+    centerContent = (
       <Stack spacing={0} sx={{ height: "100%" }}>
         <Box
           sx={{
@@ -542,10 +309,7 @@ export default function IncidentInvestigationPage() {
           }}
         >
           <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <IconButton size="small" onClick={handleBackToHub}><ArrowLeftIcon /></IconButton>
-              <Typography variant="subtitle1" fontWeight={600}>Notify stakeholders</Typography>
-            </Stack>
+            <Typography variant="subtitle1" fontWeight={600}>Notify stakeholders</Typography>
             {notifyDone && (
               <StatusIndicator icon={<CheckedCircleIcon />} label={`Sent ${sentAt}`} size="small" color="success" />
             )}
@@ -657,7 +421,7 @@ export default function IncidentInvestigationPage() {
                   </Box>
                   <Stack spacing={0.25} flex={1}>
                     <Typography variant="textSm" fontWeight={600}>
-                      Critical security incident requires your attention
+                      Critical security incident — immediate attention required
                     </Typography>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <Chip label="Critical" size="small" color="error" />
@@ -671,8 +435,8 @@ export default function IncidentInvestigationPage() {
               <Box sx={{ px: 2, py: 2 }}>
                 <Stack spacing={1.5}>
                   <Typography variant="caption">
-                    You're receiving this because you own or are responsible for assets affected by a critical
-                    security vulnerability that requires immediate action.
+                    Recipients are asset owners or delegates responsible for systems affected by this critical
+                    vulnerability. Immediate action is required.
                   </Typography>
                   <Box sx={{ p: 1.5, borderRadius: tokens.semantic.radius.sm.value, backgroundColor: tokens.semantic.color.surface.variant.value }}>
                     <Typography variant="caption" fontWeight={600} sx={{ display: "block", mb: 0.75 }}>Incident summary</Typography>
@@ -704,8 +468,8 @@ export default function IncidentInvestigationPage() {
                   >
                     <Typography variant="caption" fontWeight={600} sx={{ display: "block", mb: 0.25 }}>Required action</Typography>
                     <Typography variant="caption">
-                      Review the affected assets you own, confirm business impact, and coordinate with the
-                      security team on the remediation timeline.
+                      Review affected assets, confirm business impact, and coordinate with the security team on
+                      the remediation timeline.
                     </Typography>
                   </Box>
                   <Typography variant="caption" sx={{ color: tokens.semantic.color.type.muted.value, fontSize: "0.65rem" }}>
@@ -718,19 +482,18 @@ export default function IncidentInvestigationPage() {
         </Box>
       </Stack>
     );
-  } else if (leftView === "remediation-plan") {
-    leftPanelContent = (
+  } else if (activeStep === 2) {
+    centerContent = (
       <RemediationPlanPanel
         tickets={remediationTickets}
         failedControls={failedControls}
         relatedThreats={relatedThreats}
-        onBack={handleBackToHub}
         onInitiateRemediation={handleInitiateRemediation}
         remediationStarted={phases.remediation !== "not-started"}
       />
     );
-  } else if (leftView === "third-party-review") {
-    leftPanelContent = (
+  } else if (activeStep === 3) {
+    centerContent = (
       <StepPreviewPanel
         title="Third-party review"
         description="Assess CrowdStrike vendor record, SLAs, and compensating controls. This step will document the vendor assessment and any follow-up actions."
@@ -739,11 +502,10 @@ export default function IncidentInvestigationPage() {
         onCtaClick={handleStartThirdPartyReview}
         completed={phases.thirdParty === "complete"}
         completedAt={phaseTimestamps.thirdParty ? `Today, ${phaseTimestamps.thirdParty}` : undefined}
-        onBack={handleBackToHub}
       />
     );
-  } else if (leftView === "resolution") {
-    leftPanelContent = (
+  } else if (activeStep === 4) {
+    centerContent = (
       <StepPreviewPanel
         title="Resolution"
         description="Verify patches deployed, close ITSM tickets, and compile the evidence pack for audit. Confirm all remediation tickets are resolved and controls are restored."
@@ -752,13 +514,11 @@ export default function IncidentInvestigationPage() {
         onCtaClick={handleCompleteResolution}
         completed={phases.resolution === "complete"}
         completedAt={phaseTimestamps.resolution ? `Today, ${phaseTimestamps.resolution}` : undefined}
-        onBack={handleBackToHub}
       />
     );
-  } else if (leftView === "board-briefing") {
-    leftPanelContent = (
+  } else if (activeStep === 5) {
+    centerContent = (
       <BoardBriefingPanel
-        onBack={handleBackToHub}
         onSend={handleSendBoardBriefing}
         completed={phases.boardBriefing === "complete"}
         completedAt={phaseTimestamps.boardBriefing ? `Today, ${phaseTimestamps.boardBriefing}` : undefined}
@@ -769,14 +529,14 @@ export default function IncidentInvestigationPage() {
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", height: "100dvh" }}>
+    <Box sx={{ display: "flex", flexDirection: "column", flex: 1, height: "100%", minHeight: 0 }}>
       {/* Top bar */}
       <Box
         sx={{
           backgroundColor: tokens.semantic.color.surface.default.value,
           borderBottom: `1px solid ${tokens.semantic.color.outline.fixed.value}`,
           px: 3,
-          py: 1.5,
+          py: 1.25,
           flexShrink: 0,
         }}
       >
@@ -786,37 +546,78 @@ export default function IncidentInvestigationPage() {
               <ArrowLeftIcon />
             </IconButton>
             <Typography variant="subtitle1" fontWeight={600}>
-              Security incident: CVE-2026-1847
+              CVE-2026-1847
             </Typography>
+            <Chip label="Critical" size="small" color="error" />
           </Stack>
-          {statusChip}
+          <Button
+            variant="text"
+            size="small"
+            onClick={handleResetDemo}
+            sx={{ color: tokens.semantic.color.type.muted.value, textTransform: "none", fontSize: 12 }}
+          >
+            Reset demo
+          </Button>
         </Stack>
       </Box>
 
-      {/* Two-panel content */}
-      <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        {/* Left: Workflow panel (3/4) */}
+      {/* Three-column layout */}
+      <Box sx={{ display: "flex", flex: 1, minHeight: 0, overflow: "hidden" }}>
+        {/* Left: Workflow stepper sidebar */}
         <Box
           sx={{
-            width: "75%",
+            width: 220,
+            flexShrink: 0,
+            borderRight: `1px solid ${tokens.semantic.color.outline.fixed.value}`,
+            backgroundColor: tokens.semantic.color.surface.default.value,
             display: "flex",
             flexDirection: "column",
-            borderRight: `1px solid ${tokens.semantic.color.outline.fixed.value}`,
+            minHeight: 0,
+            overflow: "hidden",
           }}
         >
-          {leftPanelContent}
+          <Typography
+            variant="subtitle2"
+            fontWeight={600}
+            sx={{ px: 2.5, pt: 2.5, pb: 1.5 }}
+          >
+            Incident workflow
+          </Typography>
+          <LinearStepper
+            steps={stepperSteps}
+            activeStepIndex={activeStep}
+            orientation="vertical"
+            nonLinear
+            onChange={(index) => setActiveStep(index)}
+          />
         </Box>
 
-        {/* Right: Chat assistant (1/4) */}
+        {/* Center: Step content */}
         <Box
           sx={{
-            width: "25%",
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
+            overflow: "hidden",
+          }}
+        >
+          {centerContent}
+        </Box>
+
+        {/* Right: Chat assistant */}
+        <Box
+          sx={{
+            width: 320,
+            flexShrink: 0,
+            borderLeft: `1px solid ${tokens.semantic.color.outline.fixed.value}`,
             display: "flex",
             flexDirection: "column",
             backgroundColor: tokens.semantic.color.surface.default.value,
+            minHeight: 0,
+            overflow: "hidden",
           }}
         >
-          {/* Chat header */}
           <Box
             sx={{
               px: 2,
@@ -831,7 +632,6 @@ export default function IncidentInvestigationPage() {
             </Stack>
           </Box>
 
-          {/* Chat messages area (empty state) */}
           <Box sx={{ flex: 1, overflow: "auto", display: "flex", alignItems: "center", justifyContent: "center", p: 3 }}>
             <Stack alignItems="center" spacing={1.5} sx={{ textAlign: "center" }}>
               <Box
@@ -847,14 +647,13 @@ export default function IncidentInvestigationPage() {
               >
                 <AiSparkleIcon style={{ fontSize: 24, color: tokens.semantic.color.type.muted.value }} />
               </Box>
-              <Typography variant="textSm" fontWeight={600}>How can I help?</Typography>
+              <Typography variant="textSm" fontWeight={600}>Investigation assistant</Typography>
               <Typography variant="caption" sx={{ color: tokens.semantic.color.type.muted.value }}>
-                Ask about this incident, request analysis, or get recommendations.
+                Questions about this incident, analysis, and recommended next steps.
               </Typography>
             </Stack>
           </Box>
 
-          {/* Chat input (pinned to bottom) — Atlas AI Chatbox; compact layout matches narrow rail / mobile */}
           <Box
             sx={{
               px: 1,
@@ -867,27 +666,12 @@ export default function IncidentInvestigationPage() {
           </Box>
         </Box>
       </Box>
-
-      {/* Demo reset */}
-      <Box sx={{ px: 2, py: 0.75, textAlign: "right", borderTop: `1px solid ${tokens.semantic.color.outline.fixed.value}`, flexShrink: 0 }}>
-        <Button variant="text" size="small" onClick={handleResetDemo} sx={{ color: tokens.semantic.color.type.muted.value, textTransform: "none", fontSize: 12 }}>
-          Reset demo
-        </Button>
-      </Box>
-
-      {/* Demo reset */}
-      <Box sx={{ px: 2, py: 1, textAlign: "right", borderTop: `1px solid ${tokens.semantic.color.outline.fixed.value}` }}>
-        <Button variant="text" size="small" onClick={handleResetDemo} sx={{ color: tokens.semantic.color.type.muted.value, textTransform: "none", fontSize: 12 }}>
-          Reset demo
-        </Button>
-      </Box>
     </Box>
   );
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-/** Atlas AI Chatbox for the investigation assistant rail (narrow width ≈ mobile-style density). */
 function InvestigationAssistantChatBox() {
   const theme = useTheme();
   const isMobileViewport = useMediaQuery(theme.breakpoints.down("md"));
@@ -897,7 +681,6 @@ function InvestigationAssistantChatBox() {
       <AIChatBox
         isUploadAvailable
         onSubmit={() => {
-          // Prototype: keep the prompt and avoid stuck "generating" state without a backend.
           return false;
         }}
         slotProps={{
@@ -934,26 +717,6 @@ function InvestigationAssistantChatBox() {
       />
     </AIChatContextProvider>
   );
-}
-
-function SummaryMetric({ label, value }: { label: string; value: string }) {
-  const { tokens } = useTheme();
-  return (
-    <Stack spacing={0}>
-      <Typography variant="caption" sx={{ color: tokens.semantic.color.type.muted.value, fontSize: "0.675rem" }}>
-        {label}
-      </Typography>
-      <Typography variant="caption" fontWeight={600}>{value}</Typography>
-    </Stack>
-  );
-}
-
-function StatusChip({ status }: { status: PhaseStatus }) {
-  if (status === "complete")
-    return <StatusIndicator icon={<CheckedCircleIcon />} label="Complete" size="small" color="success" />;
-  if (status === "in-progress")
-    return <StatusIndicator label="In progress" size="small" color="warning" />;
-  return <StatusIndicator label="Not started" size="small" color="subtle" />;
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {

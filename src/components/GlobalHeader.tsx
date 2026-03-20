@@ -93,10 +93,10 @@ export default function GlobalHeader() {
                 bgcolor: tokens.semantic.color.dataVisualization.qualitative.blue["04"].value,
               }}
             >
-              Pf
+              Or
             </Avatar>
             <Typography variant="caption" fontWeight={600} sx={{ userSelect: "none" }}>
-              Pfizer Compliance
+              Organization
             </Typography>
             <Avatar
               sx={{
