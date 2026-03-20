@@ -97,6 +97,25 @@ function SelectableCard({ selected, onClick, swatches, title, description }: Sel
   );
 }
 
+/** Matches diligent-security-linear FAB: Tailwind emerald-100/950 palette + borders. */
+const FAB_EMERALD_LIGHT = {
+  bg: "#d1fae5",
+  border: "rgba(52, 211, 153, 0.6)",
+  fg: "#064e3b",
+  hoverBg: "rgba(167, 243, 208, 0.9)",
+  hoverBorder: "rgba(16, 185, 129, 0.8)",
+  focusOutline: "#059669",
+} as const;
+
+const FAB_EMERALD_DARK = {
+  bg: "#022c22",
+  border: "rgba(5, 150, 105, 0.85)",
+  fg: "#ecfdf5",
+  hoverBg: "#064e3b",
+  hoverBorder: "#10b981",
+  focusOutline: "#34d399",
+} as const;
+
 export default function DemoControlsFab() {
   const { tokens } = useTheme();
   const { hasAlerts, setHasAlerts, themeMode, setThemeMode } = useDemo();
@@ -111,13 +130,13 @@ export default function DemoControlsFab() {
   const typeDefault = tokens.semantic.color.type.default.value;
   const blue = tokens.semantic.color.dataVisualization.qualitative.blue["04"].value;
   const mutedLine = tokens.semantic.color.outline.fixed.value;
+  const fab = themeMode === "atlas-dark" ? FAB_EMERALD_DARK : FAB_EMERALD_LIGHT;
 
   return (
     <Portal>
       <>
         <Fab
           ref={fabRef}
-          color="primary"
           aria-label="Open demo settings: scenario and theme"
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
@@ -126,17 +145,21 @@ export default function DemoControlsFab() {
             right: 24,
             bottom: 24,
             zIndex: (t) => t.zIndex.modal + 2,
-            boxShadow: (t) => t.shadows[6],
-            border: `2px solid ${blue}`,
-            backgroundColor: error,
-            color: tokens.semantic.color.action.primary.onPrimary.value,
+            backgroundColor: fab.bg,
+            color: fab.fg,
+            border: `2px solid ${fab.border}`,
+            boxShadow: (t) => t.shadows[8],
             "&:hover": {
-              backgroundColor: error,
-              opacity: 0.92,
+              backgroundColor: fab.hoverBg,
+              borderColor: fab.hoverBorder,
+            },
+            "&:focus-visible": {
+              outline: `3px solid ${fab.focusOutline}`,
+              outlineOffset: 2,
             },
           }}
         >
-          <LightbulbIcon style={{ fontSize: 26 }} />
+          <LightbulbIcon style={{ fontSize: 26, color: fab.fg }} />
         </Fab>
 
         <Popover

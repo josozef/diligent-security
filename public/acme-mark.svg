@@ -1,0 +1,6 @@
+<!-- Acme mark: geometric triangle (demo brand for prototype) -->
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <path d="M16 4L28 26H4L16 4Z" fill="#1B4332"/>
+  <path d="M16 9L24 24H8L16 9Z" fill="#52B788"/>
+  <path d="M16 14L19 20H13L16 14Z" fill="#F8F9FA"/>
+</svg>

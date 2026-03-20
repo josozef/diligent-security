@@ -19,6 +19,7 @@
     "@mui/material": "^7",
     "@mui/system": "^7",
     "@mui/utils": "^7",
+    "@mui/x-charts": "^8.28.0",
     "@mui/x-data-grid": "^8",
     "@mui/x-data-grid-pro": "^8",
     "@mui/x-date-pickers": "^8",

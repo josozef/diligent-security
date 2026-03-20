@@ -1,95 +1,118 @@
-import { Box, Chip, Paper, Stack, Typography, useTheme } from "@mui/material";
+import { Box, Paper, Stack, Typography, useTheme } from "@mui/material";
+import DocumentIcon from "@diligentcorp/atlas-react-bundle/icons/Document";
+import FrameworksIcon from "@diligentcorp/atlas-react-bundle/icons/Frameworks";
+import ThirdPartyIcon from "@diligentcorp/atlas-react-bundle/icons/ThirdParty";
+import VirusFoundIcon from "@diligentcorp/atlas-react-bundle/icons/VirusFound";
 
 interface Activity {
-  app: string;
-  date: string;
+  Icon: typeof VirusFoundIcon;
+  title: string;
   description: string;
+  timestamp: string;
 }
 
 const activities: Activity[] = [
   {
-    app: "Vulnerability management",
-    date: "Mar 3",
-    description:
-      "Completed weekly vulnerability scan for production environment. 3 new findings identified.",
+    Icon: VirusFoundIcon,
+    title: "Vulnerability Management",
+    description: "12 new vulnerabilities detected in Q1 scan",
+    timestamp: "2 hours ago",
   },
   {
-    app: "Risk register",
-    date: "Mar 3",
-    description:
-      "Updated risk assessment for cloud infrastructure migration. Residual risk reduced to moderate.",
+    Icon: DocumentIcon,
+    title: "Risk Register",
+    description: "Risk appetite statement updated for FY2026",
+    timestamp: "5 hours ago",
   },
   {
-    app: "Compliance",
-    date: "Mar 2",
-    description:
-      "Reviewed NIST CSF alignment report and updated 12 control mappings for Q1 audit readiness.",
+    Icon: FrameworksIcon,
+    title: "Compliance Monitoring",
+    description: "SOC 2 Type II audit evidence collection at 87%",
+    timestamp: "1 day ago",
   },
   {
-    app: "Vendor risk",
-    date: "Mar 2",
-    description:
-      "Completed annual security review for 5 critical tier-1 vendors. All certifications current.",
+    Icon: ThirdPartyIcon,
+    title: "Vendor Risk",
+    description: "3 vendors flagged for SLA non-compliance",
+    timestamp: "2 days ago",
   },
 ];
 
 export default function RecentActivity() {
   const { tokens } = useTheme();
+  const outline = tokens.semantic.color.outline.default.value;
+  const outlineHover = tokens.semantic.color.outline.hover.value;
+  const muted = tokens.semantic.color.type.muted.value;
 
   return (
-    <Stack spacing={1.5}>
-      <Stack spacing={0.25}>
-        <Typography variant="h6" fontWeight={600}>
-          Recent activity
-        </Typography>
-        <Typography
-          variant="textSm"
-          sx={{ color: tokens.semantic.color.type.muted.value }}
-        >
-          Latest updates from connected applications.
-        </Typography>
-      </Stack>
+    <Stack spacing={1.25}>
+      <Typography variant="subtitle2" fontWeight={600} sx={{ letterSpacing: "0.01em" }}>
+        Recent Activity
+      </Typography>
 
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: "repeat(2, 1fr)",
+          gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" },
           gap: 2,
         }}
       >
         {activities.map((activity) => (
           <Paper
-            key={activity.app}
+            key={activity.title}
+            component="button"
+            type="button"
             elevation={0}
             sx={{
               p: 2.5,
-              border: `1px solid ${tokens.semantic.color.outline.default.value}`,
+              border: `1px solid ${outline}`,
               borderRadius: tokens.semantic.radius.lg.value,
+              backgroundColor: tokens.semantic.color.surface.default.value,
               cursor: "pointer",
-              transition: "background-color 0.15s",
+              textAlign: "left",
+              width: "100%",
+              font: "inherit",
+              color: "inherit",
+              transition: (t) =>
+                t.transitions.create(["box-shadow", "border-color", "transform", "background-color"], {
+                  duration: t.transitions.duration.shorter,
+                }),
               "&:hover": {
+                borderColor: outlineHover,
                 backgroundColor: tokens.semantic.color.surface.variant.value,
+                boxShadow: (t) => t.shadows[4],
+                transform: "translateY(-2px)",
+              },
+              "&:focus-visible": {
+                outline: `2px solid ${tokens.semantic.color.action.primary.default.value}`,
+                outlineOffset: 2,
+              },
+              "&:active": {
+                transform: "translateY(0)",
+                boxShadow: (t) => t.shadows[2],
               },
             }}
           >
-            <Stack spacing={1}>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Typography variant="subtitle2" fontWeight={700}>
-                  {activity.app}
+            <Stack direction="row" spacing={1.5} alignItems="flex-start">
+              <activity.Icon
+                style={{
+                  fontSize: 20,
+                  flexShrink: 0,
+                  marginTop: 2,
+                  color: muted,
+                }}
+              />
+              <Stack spacing={0.5} flex={1} minWidth={0}>
+                <Typography variant="subtitle2" fontWeight={600}>
+                  {activity.title}
                 </Typography>
-                <Chip
-                  label={activity.date}
-                  size="small"
-                  variant="outlined"
-                  sx={{ height: 20, fontSize: "0.7rem" }}
-                />
+                <Typography variant="textSm" sx={{ color: muted }}>
+                  {activity.description}
+                </Typography>
+                <Typography variant="caption" sx={{ color: muted, opacity: 0.85 }}>
+                  {activity.timestamp}
+                </Typography>
               </Stack>
-              <Typography
-                variant="textSm"
-                sx={{ color: tokens.semantic.color.type.muted.value }}
-              >
-                {activity.description}
-              </Typography>
             </Stack>
           </Paper>
         ))}

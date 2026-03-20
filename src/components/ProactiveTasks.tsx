@@ -1,200 +1,182 @@
+import { Box, Link, Stack, Typography, useTheme } from "@mui/material";
 import {
-  Box,
-  Button,
-  Chip,
-  Divider,
-  Link,
-  Paper,
-  Stack,
-  Typography,
-  useTheme,
-} from "@mui/material";
+  OPERATIONAL_TRENDS_SUBTITLE,
+  OPERATIONAL_TRENDS_TITLE,
+  OperationalMonitoringCharts,
+} from "./OperationalTrends.js";
 
 interface Task {
-  title: string;
-  description: string;
-  app: string;
-}
-
-interface Feature {
   title: string;
   description: string;
 }
 
 const tasks: Task[] = [
   {
-    title: "Complete Q1 IT risk assessment",
+    title: "Complete Q1 Risk Assessment",
     description:
-      "Annual risk assessment due in 14 days. Review updated asset inventory and threat landscape.",
-    app: "Risk Manager",
+      "Review asset inventory, threat landscape, and control effectiveness for the quarter. When you're ready, capture decisions and export a summary leadership can act on.",
   },
   {
-    title: "Review vendor security certifications",
+    title: "Annual Vendor Security Reviews",
     description:
-      "3 vendor SOC 2 reports received. Verify compliance and update vendor risk profiles.",
-    app: "Vendor Risk",
+      "Gather certifications, compare contract SLAs, and refresh tier ratings for critical vendors. We'll highlight missing artifacts and overdue follow-ups so you know where to start.",
   },
   {
-    title: "Update disaster recovery plan",
+    title: "Disaster Recovery Plan Update",
     description:
-      "DR plan last updated 90 days ago. New cloud infrastructure changes require review.",
-    app: "Risk Manager",
+      "Fold in recent infrastructure and dependency changes across runbooks, RTO/RPO targets, failover steps, and stakeholder communications so drills match how you operate today.",
   },
   {
-    title: "Run NIS2 compliance gap analysis",
+    title: "NIS2 Gap Analysis",
     description:
-      "NIS2 enforcement approaching. Identify gaps in current security controls and reporting.",
-    app: "Frameworks",
+      "Map regulatory obligations to your controls, evidence, and reporting workflows. See what's already covered, what needs an owner, and what to prioritize before deadlines tighten.",
   },
 ];
 
-const features: Feature[] = [
-  {
-    title: "AI vulnerability prioritization",
-    description:
-      "Automatically rank vulnerabilities by business impact using AI-driven analysis.",
-  },
-  {
-    title: "Enhanced compliance dashboard",
-    description:
-      "Real-time compliance posture across all frameworks in a single view.",
-  },
-  {
-    title: "Automated vendor monitoring",
-    description:
-      "Continuous monitoring of vendor security posture with real-time alerts.",
-  },
-];
+const subtleLink = {
+  cursor: "pointer",
+  fontSize: "0.75rem",
+  fontWeight: 500,
+};
+
+/** Keeps both column subtitles the same block height so row 3 tops align across the grid. */
+const SUBTITLE_MIN_HEIGHT_MD = "2.75rem";
 
 export default function ProactiveTasks() {
   const { tokens } = useTheme();
+  const muted = tokens.semantic.color.type.muted.value;
+  const outline = tokens.semantic.color.outline.default.value;
 
   return (
     <Box
       sx={{
         display: "grid",
-        gridTemplateColumns: "7fr 5fr",
-        gap: 3,
+        gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+        columnGap: { xs: 4, md: 5 },
+        rowGap: 0,
         alignItems: "start",
       }}
     >
-      {/* Left: proactive tasks */}
-      <Stack spacing={2}>
-        <Typography variant="h6" fontWeight={600}>
-          Since everything's under control, get ahead of a few things
-        </Typography>
-
-        <Stack spacing={0}>
-          {tasks.map((task, i) => (
-            <Box key={task.title}>
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                sx={{ py: 2 }}
-              >
-                <Stack spacing={0.5} flex={1} sx={{ mr: 2 }}>
-                  <Typography variant="subtitle2" fontWeight={600}>
-                    {task.title}
-                  </Typography>
-                  <Typography
-                    variant="textSm"
-                    sx={{
-                      color: tokens.semantic.color.type.muted.value,
-                    }}
-                  >
-                    {task.description}
-                  </Typography>
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Chip
-                      label={task.app}
-                      size="small"
-                      variant="outlined"
-                      sx={{ height: 20, fontSize: "0.7rem" }}
-                    />
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: tokens.semantic.color.type.muted.value,
-                      }}
-                    >
-                      Ready to complete
-                    </Typography>
-                  </Stack>
-                </Stack>
-                <Button variant="outlined" size="small" sx={{ flexShrink: 0 }}>
-                  Open in app
-                </Button>
-              </Stack>
-              {i < tasks.length - 1 && <Divider />}
-            </Box>
-          ))}
-        </Stack>
-      </Stack>
-
-      {/* Right: what's new */}
-      <Paper
-        elevation={0}
+      <Typography
+        variant="subtitle2"
+        fontWeight={600}
         sx={{
-          p: 3,
-          border: `1px solid ${tokens.semantic.color.outline.default.value}`,
-          borderRadius: tokens.semantic.radius.lg.value,
-          backgroundColor: tokens.semantic.color.surface.variant.value,
+          letterSpacing: "0.01em",
+          gridColumn: { xs: 1, md: 1 },
+          gridRow: { xs: 1, md: 1 },
+          mb: 0.375,
         }}
       >
-        <Stack spacing={2}>
-          <Stack spacing={0.5}>
-            <Typography
-              variant="overline"
-              sx={{
-                color: tokens.semantic.color.type.muted.value,
-                letterSpacing: 1.5,
-                fontSize: "0.65rem",
-              }}
-            >
-              What's new
-            </Typography>
-            <Typography variant="subtitle1" fontWeight={600}>
-              Good to know and good to go
-            </Typography>
-            <Typography
-              variant="textSm"
-              sx={{ color: tokens.semantic.color.type.muted.value }}
-            >
-              Learn more about available features and capabilities.
-            </Typography>
-          </Stack>
+        Proactive Tasks
+      </Typography>
 
-          <Divider />
+      <Typography
+        variant="subtitle2"
+        fontWeight={600}
+        sx={{
+          letterSpacing: "0.01em",
+          gridColumn: { xs: 1, md: 2 },
+          gridRow: { xs: 4, md: 1 },
+          mb: 0.375,
+        }}
+      >
+        {OPERATIONAL_TRENDS_TITLE}
+      </Typography>
 
-          {features.map((feature, i) => (
-            <Box key={feature.title}>
-              <Stack spacing={0.5}>
-                <Typography variant="subtitle2" fontWeight={600}>
-                  {feature.title}
-                </Typography>
-                <Typography
-                  variant="textSm"
-                  sx={{
-                    color: tokens.semantic.color.type.muted.value,
-                  }}
-                >
-                  {feature.description}
-                </Typography>
+      <Typography
+        variant="caption"
+        sx={{
+          color: muted,
+          lineHeight: 1.4,
+          gridColumn: { xs: 1, md: 1 },
+          gridRow: { xs: 2, md: 2 },
+          minHeight: { md: SUBTITLE_MIN_HEIGHT_MD },
+          alignSelf: "start",
+        }}
+      >
+        Optional work you can start when you&apos;re ready—nothing here is in progress.
+      </Typography>
+
+      <Typography
+        variant="caption"
+        sx={{
+          color: muted,
+          lineHeight: 1.4,
+          gridColumn: { xs: 1, md: 2 },
+          gridRow: { xs: 5, md: 2 },
+          minHeight: { md: SUBTITLE_MIN_HEIGHT_MD },
+          alignSelf: "start",
+        }}
+      >
+        {OPERATIONAL_TRENDS_SUBTITLE}
+      </Typography>
+
+      <Stack
+        component="ul"
+        spacing={0}
+        sx={{
+          m: 0,
+          p: 0,
+          listStyle: "none",
+          gridColumn: { xs: 1, md: 1 },
+          gridRow: { xs: 3, md: 3 },
+          mt: { xs: 2, md: 0 },
+        }}
+      >
+        {tasks.map((task, i) => (
+          <Box
+            key={task.title}
+            component="li"
+            sx={{
+              borderTop: i > 0 ? `1px solid ${outline}` : "none",
+              ...(i === 0
+                ? { pt: { xs: 1, md: 0 }, pb: 1.75 }
+                : { py: 1.75 }),
+            }}
+          >
+            <Stack spacing={0.5}>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ fontSize: "0.8125rem", lineHeight: 1.35 }}>
+                {task.title}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: muted,
+                  lineHeight: 1.45,
+                  display: "block",
+                  fontSize: "0.8125rem",
+                }}
+              >
+                {task.description}
+              </Typography>
+              <Stack direction="row" alignItems="center" spacing={2} sx={{ pt: 0.5 }}>
+                <Link component="button" type="button" underline="hover" sx={subtleLink}>
+                  Learn more
+                </Link>
                 <Link
                   component="button"
-                  variant="caption"
+                  type="button"
                   underline="hover"
-                  sx={{ fontWeight: 700, alignSelf: "flex-start" }}
+                  sx={{ ...subtleLink, color: muted, fontWeight: 400 }}
                 >
-                  OPEN
+                  Not now
                 </Link>
               </Stack>
-              {i < features.length - 1 && <Divider sx={{ mt: 1 }} />}
-            </Box>
-          ))}
-        </Stack>
-      </Paper>
+            </Stack>
+          </Box>
+        ))}
+      </Stack>
+
+      <Box
+        sx={{
+          gridColumn: { xs: 1, md: 2 },
+          gridRow: { xs: 6, md: 3 },
+          mt: { xs: 3, md: 0 },
+          minWidth: 0,
+        }}
+      >
+        <OperationalMonitoringCharts />
+      </Box>
     </Box>
   );
 }
