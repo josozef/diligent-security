@@ -59,6 +59,8 @@ function CenteredMain() {
           px: 3,
           py: 3,
           minHeight: 0,
+          overflowY: "auto",
+          WebkitOverflowScrolling: "touch",
         }}
       >
         <Outlet />
