@@ -161,7 +161,7 @@ export default function ProactiveTasks() {
               variant="textSm"
               sx={{ color: tokens.semantic.color.type.muted.value }}
             >
-              Learn more about features and capabilities you already have today.
+              Learn more about available features and capabilities.
             </Typography>
           </Stack>
 

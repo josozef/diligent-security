@@ -96,6 +96,15 @@ The Diligent writing style is following the Microsoft Writing Style Guide. Consu
 - ❌ Don’t over-explain or repeat yourself.
 - ❌ Don’t rely on culture-specific references or hard-to-translate construct
 
+## Dev servers and caching
+
+When the user reports **stale UI, wrong bundle, or HMR/cache issues** (or asks to refresh dev servers): **stop existing Vite processes** for this repo (and **`diligent-security-linear`** if both are in use), then start again on **new explicit ports** (for example `npm run dev -- --port 4210`). Do not rely on the same port session after major UI or dependency changes.
+
+Pairing for local comparison:
+
+- **`diligent-security`** (Atlas / MUI): pick one port (e.g. `4210`).
+- **`../diligent-security-linear`**: pick another (e.g. `4211`).
+
 ## Import paths
 
 Import paths are slightly different for the prototype environment compared to the regular development environment.

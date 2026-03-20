@@ -200,7 +200,7 @@ export default function NotificationPreviewPanel({
                 </Box>
                 <Stack spacing={0.25} flex={1}>
                   <Typography variant="textSm" fontWeight={600}>
-                    Critical security incident requires your attention
+                    Critical security incident — immediate attention required
                   </Typography>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Chip label="Critical" size="small" color="error" />
@@ -221,9 +221,9 @@ export default function NotificationPreviewPanel({
             <Box sx={{ px: 2, py: 2 }}>
               <Stack spacing={1.5}>
                 <Typography variant="caption">
-                  You're receiving this because you own or are responsible for
-                  assets affected by a critical security vulnerability that
-                  requires immediate action.
+                  Recipients are asset owners or delegates responsible for systems
+                  affected by this critical vulnerability. Immediate action is
+                  required.
                 </Typography>
 
                 <Box
@@ -317,10 +317,9 @@ export default function NotificationPreviewPanel({
                     Required action
                   </Typography>
                   <Typography variant="caption">
-                    Review the affected assets you own, confirm business impact,
-                    and coordinate with the security team on the remediation
-                    timeline. Patch deployment is expected within 24 hours for
-                    production systems.
+                    Review affected assets, confirm business impact, and coordinate
+                    with the security team on the remediation timeline. Patch
+                    deployment is expected within 24 hours for production systems.
                   </Typography>
                 </Box>
 

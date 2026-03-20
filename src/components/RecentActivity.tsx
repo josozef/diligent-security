@@ -40,13 +40,13 @@ export default function RecentActivity() {
     <Stack spacing={1.5}>
       <Stack spacing={0.25}>
         <Typography variant="h6" fontWeight={600}>
-          Pick up where you left off
+          Recent activity
         </Typography>
         <Typography
           variant="textSm"
           sx={{ color: tokens.semantic.color.type.muted.value }}
         >
-          Continue working in your Diligent applications.
+          Latest updates from connected applications.
         </Typography>
       </Stack>
 

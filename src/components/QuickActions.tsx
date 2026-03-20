@@ -10,25 +10,50 @@ import {
   useTheme,
 } from "@mui/material";
 import AutomatedIcon from "@diligentcorp/atlas-react-bundle/icons/Automated";
-import AssetInventoryIcon from "@diligentcorp/atlas-react-bundle/icons/AssetInventory";
+import DocumentIcon from "@diligentcorp/atlas-react-bundle/icons/Document";
 import ReportsIcon from "@diligentcorp/atlas-react-bundle/icons/Reports";
 import AiSearchIcon from "@diligentcorp/atlas-react-bundle/icons/AiSearch";
 import IssueTrackerIcon from "@diligentcorp/atlas-react-bundle/icons/IssueTracker";
 import FrameworksIcon from "@diligentcorp/atlas-react-bundle/icons/Frameworks";
 import SendIcon from "@diligentcorp/atlas-react-bundle/icons/Send";
-import AiSparkleIcon from "@diligentcorp/atlas-react-bundle/icons/AiSparkle";
 
 const actions = [
-  { icon: <AutomatedIcon />, label: "Run scan", subtitle: "Scan environments" },
-  { icon: <AssetInventoryIcon />, label: "View assets", subtitle: "Asset inventory" },
-  { icon: <ReportsIcon />, label: "Risk report", subtitle: "Generate report" },
-  { icon: <AiSearchIcon />, label: "AI search", subtitle: "Ask anything" },
-  { icon: <IssueTrackerIcon />, label: "Create ticket", subtitle: "Log a new issue" },
-  { icon: <FrameworksIcon />, label: "Compliance", subtitle: "Framework status" },
+  {
+    icon: <AutomatedIcon />,
+    label: "Start response workflow",
+    subtitle: "Triage incidents end to end",
+  },
+  {
+    icon: <DocumentIcon />,
+    label: "Draft security briefing",
+    subtitle: "Board and executive summaries",
+  },
+  {
+    icon: <ReportsIcon />,
+    label: "Run exposure report",
+    subtitle: "CVE trends and heat maps",
+  },
+  {
+    icon: <AiSearchIcon />,
+    label: "Search intelligence",
+    subtitle: "Policies, assets, and logs",
+  },
+  {
+    icon: <IssueTrackerIcon />,
+    label: "Open remediation ticket",
+    subtitle: "Track patches and owners",
+  },
+  {
+    icon: <FrameworksIcon />,
+    label: "Review compliance scope",
+    subtitle: "Controls and attestations",
+  },
 ];
 
 export default function QuickActions() {
   const { tokens } = useTheme();
+  const warn = tokens.semantic.color.status.warning.default.value;
+  const warnText = tokens.semantic.color.status.warning.text.value;
 
   return (
     <Paper
@@ -51,8 +76,9 @@ export default function QuickActions() {
             </Typography>
             <Typography
               variant="textSm"
-              sx={({ tokens }) => ({
-                color: tokens.semantic.color.type.muted.value,
+              sx={({ tokens: t }) => ({
+                color: t.semantic.color.type.muted.value,
+                maxWidth: 520,
               })}
             >
               Ask questions or choose an action below. Work entirely within
@@ -60,10 +86,27 @@ export default function QuickActions() {
             </Typography>
           </Stack>
           <Chip
-            icon={<AiSparkleIcon />}
-            label="Dina"
             size="small"
-            color="success"
+            variant="outlined"
+            label="Demo"
+            icon={
+              <Box
+                component="span"
+                sx={{
+                  ml: 0.5,
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  bgcolor: warn,
+                }}
+              />
+            }
+            sx={{
+              borderColor: warn,
+              color: warnText,
+              fontWeight: 600,
+              flexShrink: 0,
+            }}
           />
         </Stack>
 
@@ -71,14 +114,15 @@ export default function QuickActions() {
           fullWidth
           placeholder="Ask a question or describe what you need..."
           endAdornment={
-            <InputAdornment position="end">
+            <InputAdornment position="end" sx={{ ml: 0.5 }}>
               <ButtonBase
+                aria-label="Send"
                 sx={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: "50%",
+                  width: 40,
+                  height: 40,
+                  borderRadius: tokens.semantic.radius.sm.value,
                   backgroundColor: "primary.main",
-                  color: "#fff",
+                  color: tokens.semantic.color.action.primary.onPrimary.value,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -94,11 +138,12 @@ export default function QuickActions() {
         <Stack spacing={1.5}>
           <Typography
             variant="overline"
-            sx={({ tokens }) => ({
+            sx={{
               color: tokens.semantic.color.type.muted.value,
-              letterSpacing: 1.5,
+              letterSpacing: "0.14em",
               fontSize: "0.65rem",
-            })}
+              fontWeight: 600,
+            }}
           >
             Or start with
           </Typography>
@@ -106,8 +151,12 @@ export default function QuickActions() {
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: "repeat(6, 1fr)",
               gap: 1.5,
+              gridTemplateColumns: {
+                xs: "repeat(2, minmax(0, 1fr))",
+                sm: "repeat(3, minmax(0, 1fr))",
+                md: "repeat(6, minmax(0, 1fr))",
+              },
             }}
           >
             {actions.map((action) => (
@@ -117,6 +166,7 @@ export default function QuickActions() {
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
+                  textAlign: "center",
                   gap: 0.75,
                   p: 2,
                   borderRadius: tokens.semantic.radius.lg.value,
@@ -131,22 +181,26 @@ export default function QuickActions() {
                 }}
               >
                 <Box
-                  sx={({ tokens }) => ({
-                    color: tokens.semantic.color.type.muted.value,
+                  sx={({ tokens: t }) => ({
+                    color: t.semantic.color.type.muted.value,
                     display: "flex",
                   })}
                 >
                   {action.icon}
                 </Box>
-                <Typography variant="textSm" fontWeight={600} noWrap>
+                <Typography variant="textSm" fontWeight={600}>
                   {action.label}
                 </Typography>
                 <Typography
                   variant="caption"
-                  sx={({ tokens }) => ({
-                    color: tokens.semantic.color.type.muted.value,
+                  sx={({ tokens: t }) => ({
+                    color: t.semantic.color.type.muted.value,
+                    lineHeight: 1.35,
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
                   })}
-                  noWrap
                 >
                   {action.subtitle}
                 </Typography>
