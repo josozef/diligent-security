@@ -8,7 +8,6 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { StatusIndicator } from "@diligentcorp/atlas-react-bundle";
 
 const AFFECTED_ASSETS = [
   { system: "Financial Reporting Platform", assets: 5, environment: "Production" },

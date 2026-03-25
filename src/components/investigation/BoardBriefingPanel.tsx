@@ -42,7 +42,6 @@ interface BoardBriefingPanelProps {
 
 export default function BoardBriefingPanel({ onComplete }: BoardBriefingPanelProps) {
   const { tokens } = useTheme();
-  const muted = tokens.semantic.color.type.muted.value;
   const outline = tokens.semantic.color.outline.fixed.value;
   const radius = tokens.semantic.radius.md.value;
   const surface = tokens.semantic.color.surface.default.value;
