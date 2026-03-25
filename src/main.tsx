@@ -8,7 +8,7 @@ import App from "./App";
 
 function Root() {
   const [hasAlerts, setHasAlerts] = useState(true);
-  const [themeMode, setThemeMode] = useState<ThemeMode>("atlas-dark");
+  const [themeMode, setThemeMode] = useState<ThemeMode>("atlas-light");
 
   return (
     <DemoContext.Provider value={{ hasAlerts, setHasAlerts, themeMode, setThemeMode }}>
