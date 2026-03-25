@@ -12,7 +12,7 @@ interface DemoState {
 const DemoContext = createContext<DemoState>({
   hasAlerts: true,
   setHasAlerts: () => {},
-  themeMode: "atlas-dark",
+  themeMode: "atlas-light",
   setThemeMode: () => {},
 });
 
